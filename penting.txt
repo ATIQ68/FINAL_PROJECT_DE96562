@@ -1,0 +1,667 @@
+
+#include <LiquidCrystal.h>  // includes the LiquidCrystal Library\
+
+  int buttonState = 0;
+  const int rs=12, en=11, d4=5, d5=4, d6=3, d7=2 ;
+  LiquidCrystal lcd(rs,en,d4,d5,d6,d7); // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+  const int trigPin = 10;
+  const int echoPin = 13;
+  long duration;//LONG VARIABLE
+  float distanceCm, distanceMeter;
+  int buzzer = 8;
+//declaration of all pin we used
+
+void setup()
+{
+  lcd.begin(16,2); // Initializes the interface to the LCD
+  lcd.print(" SOCIAL DISTANCE ");
+  lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+  lcd.print(" FINAL PROJECT");
+  delay(2);
+  //pinMode(cmbuttonPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  pinMode(9, INPUT);
+  pinMode(8,OUTPUT);
+
+}
+
+
+
+void sound()
+{
+	if(distanceMeter >= 1000)
+  { 
+    digitalWrite(buzzer, HIGH);
+  }
+}
+
+void loop()
+{
+  //int value = digitalRead(cmbuttonPin); 
+  digitalWrite(trigPin, LOW);
+  delay(2);
+  digitalWrite(trigPin, HIGH);
+  delay(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH); 
+  buttonState = digitalRead(9);  // read the state of the pushbutton
+  
+  
+  if (buttonState == HIGH)   // check if pushbutton is pressed. if it is, the
+  {
+   	distanceMeter = duration*0.000344/2;
+    lcd.setCursor(0,0);//FOR SECOND LINE OF LCD
+    lcd.print(" SOCIAL DISTANCE ");
+    delay(2);
+    lcd.setCursor(0,1);
+    lcd.print("Distance:");
+    lcd.print(distanceMeter);
+    lcd.print("  m");
+    delay(10);
+    sound();
+    digitalWrite(buzzer, 100);
+    Serial.println("distanceMeter= ");
+  } 
+  else 
+  {
+    distanceCm= duration*0.0344/2;
+    lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+    lcd.print("YOUR MEASUREMENT ");
+    lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+    lcd.print("Distance:"); // Prints string "Distance" on the LCD
+    lcd.print(distanceCm); // Prints the distance value from the sensor
+    lcd.print("cm");
+    delay(10);
+  }
+  delay(10); // Delay a little bit to improve simulation performance
+
+/////////////////////////////////////////////////////////////
+
+#include <LiquidCrystal.h>
+#include <Servo.h>
+#include <IRremote.h>
+
+// Para iniciar pressione o botão ou o número 0 no controle remoto //
+
+int led1= 0;
+int led2= 1;
+int led3= 2;
+int enable1 = 3;
+int input1 = 4;
+int input2 = 5;
+int button1 = 6;
+IRrecv irrecv = 7;
+
+LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
+
+int sensor1 = A3;
+int buzzer = A4;
+
+int val;
+float tempo;
+bool isRedOn = false;
+
+
+decode_results results;
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+
+
+
+void setup()
+{ 
+ lcd.begin(16,2);
+ lcd.clear();
+ lcd.print("Bem vindo");
+ delay(1000);
+ lcd.clear();
+ lcd.print("Pressione o");
+ lcd.setCursor(0,1);
+ lcd.print("botao");
+ delay(1000);
+  
+ pinMode(input1, OUTPUT);
+ pinMode(enable1,OUTPUT);
+ pinMode(input2, OUTPUT);
+ pinMode(led1,   OUTPUT);
+ pinMode(led2,   OUTPUT);
+ pinMode(led3,   OUTPUT);
+ pinMode(buzzer, OUTPUT);
+ pinMode(sensor1, INPUT);
+ pinMode(button1, INPUT);
+    
+ servo1.attach(A0);
+ servo2.attach(A1);
+ servo3.attach(A2);
+  
+ //Serial.begin(9600);
+  
+ irrecv.enableIRIn();   
+}
+
+
+void beep()
+{
+ analogWrite(buzzer, 150);
+ delay(50);
+ analogWrite(buzzer,0);
+}
+
+
+void rotateLeft()
+{
+ digitalWrite(enable1, HIGH);  
+ digitalWrite(input1, HIGH);
+}
+ 
+
+void rotateRight()
+{
+ digitalWrite(enable1, HIGH);
+ digitalWrite(input2, HIGH);
+}
+ 
+
+void parar()
+{
+ digitalWrite(enable1, LOW);
+ digitalWrite(input1, LOW);
+ digitalWrite(input2, LOW);
+}
+ 
+
+void abreTampa()
+{
+ servo3.write(90);
+}
+
+
+void fechaTampa()
+{
+ servo3.write(0);
+}
+
+
+void texto1()
+{
+ lcd.clear();
+ lcd.print("TAMPA ABERTA!");
+ delay(1500);
+}
+
+
+void texto2()
+{
+ lcd.clear();
+ lcd.print("  Pressione o   ");
+ lcd.setCursor(0,1);
+ lcd.print("     botao!     ");
+}
+
+
+void timer0()
+{
+ lcd.setCursor(0,1);
+ lcd.print(tempo);
+ lcd.print(" seg(s)");
+}
+
+
+void timer1()
+{
+ lcd.setCursor(0,1);
+ lcd.print(tempo++);
+ lcd.print(" seg(s)");
+}
+
+
+void timer2()
+{
+ lcd.setCursor(0,1);
+ lcd.print(tempo=tempo+2.5);
+ lcd.print(" seg(s)");  
+}
+
+
+void controleremoto()
+{ 
+ if(irrecv.decode(&results))
+  { 
+   //Serial.println(results.value, HEX); 
+   switch (results.value) 
+    {
+     case 0xFD30CF: //botao0
+       beep();
+       fechaTampa();
+       digitalWrite(led3,HIGH);
+       operacao();
+       abreTampa();
+ 	   delay(5000);
+       break;
+      
+     case 0xFD08F7:  //botao1  
+      
+       break;
+     
+     case 0xFD8877:  //botao2  
+      
+       break;
+     
+     case 0xFD48B7:  //botao3  
+      
+       break;
+     
+     case 0xFD28D7:  //botao4  
+      
+       break;
+     
+     case 0xFDA857:  //botao5  
+      
+       break;
+     
+      case 0xFD6897: //botao6   
+      
+       break;
+               
+     case 0xFD18E7:  //botao7   
+      
+       break;     
+     
+     case 0xFD9867:  //botao8   
+      
+       break;     
+     
+     case 0xFD58A7:  //botao9
+      
+      break; 
+    }
+    irrecv.resume();  
+  }
+}
+
+
+void operacao()
+{
+	       //Encher com água
+   	  for(int cont=0;cont<5;cont++)   
+      	   {	  
+            digitalWrite(led1,HIGH);
+            lcd.clear();
+            lcd.print("Enchendo. . .");
+		    timer1();
+		    servo1.write(0); 
+ 		    delay(1000);
+            timer1();
+		    servo1.write(90); 
+ 		    delay(1000);
+        
+           }    
+   		
+    		    //Esfregar
+   	  for(int cont=0;cont<5;cont++)
+       	   {
+        	digitalWrite(led1,LOW);
+            digitalWrite(led2,HIGH);   
+            lcd.clear();
+            lcd.print("Esfregando. . .");
+            timer0();
+            rotateLeft();
+		    delay(2000);
+		    parar();
+            delay(500);
+            timer2();
+		    rotateRight();
+		    delay(2000);
+            parar();
+            delay(500);
+            timer2();
+           }
+    
+    			// Repouso
+   	  for(int cont=0;cont<5;cont++)
+           {
+        	digitalWrite(led2,LOW);
+    		digitalWrite(led1,HIGH);
+    		lcd.clear();
+        	lcd.print("De molho. . .");
+    		timer0();
+  			delay(1000);
+           	timer1();
+           }
+    
+  				// Retirar a água
+   	  for(int cont=0;cont<5;cont++)
+           {
+        	digitalWrite(led1,LOW);
+           	digitalWrite(led2,HIGH);
+            lcd.clear();
+            lcd.print("Esvaziando. . .");
+           	timer1();
+            servo2.write(0); 
+ 			delay(1000);
+           	timer1();
+			servo2.write(90); 
+ 			delay(1000);
+    	   }
+  
+  				// Centrifugar
+   	  for(int cont=0;cont<10;cont++)
+           {
+        	digitalWrite(led2,LOW);	
+   			digitalWrite(led1,HIGH);     
+			lcd.clear();
+			lcd.print("Centrifugando. . .");
+   			timer0();
+			rotateLeft();
+		    delay(1000);
+            timer1();
+           }
+ 
+ parar();
+ digitalWrite(led2,HIGH);
+ lcd.clear();
+ lcd.print("Roupa lavada !!!!");
+ timer0();
+}
+
+
+
+void loop()
+{
+  controleremoto();
+  
+  switch (digitalRead(button1)) 
+   {
+     case HIGH: 
+       beep();
+       fechaTampa();
+       digitalWrite(led3,HIGH);
+       operacao();
+       abreTampa();
+ 	   delay(5000);
+       beep();
+       break;
+      
+     case LOW:    
+      
+       break;
+   }
+  switch (digitalRead(sensor1)) 
+   {
+     case HIGH: 
+       abreTampa();
+        break;
+      
+     case LOW:    
+       fechaTampa();
+        break;
+   }  
+  
+   
+}
+
+//////////////////////////////////////////
+#include <LiquidCrystal.h>  // includes the LiquidCrystal Library\
+
+  int buttonState = 0;
+  const int rs=12, en=11, d4=5, d5=4, d6=3, d7=2 ;
+  LiquidCrystal lcd(rs,en,d4,d5,d6,d7); // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+  const int trigPin = 10;
+  const int echoPin = 13;
+  long duration;//LONG VARIABLE
+  float distanceCm, distanceMeter;
+  int buzzer = 8;
+//declaration of all pin we used
+
+void setup()
+{
+  lcd.begin(16,2); // Initializes the interface to the LCD
+  lcd.print(" SOCIAL DISTANCE ");
+  lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+  lcd.print(" FINAL PROJECT");
+  delay(2);
+  //pinMode(cmbuttonPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  pinMode(9, INPUT);
+  pinMode(8,OUTPUT);
+
+}
+
+
+
+void sound()
+{
+	if(distanceMeter >= 1000)
+  { 
+    digitalWrite(buzzer, HIGH);
+  }
+}
+
+void loop()
+{
+  //int value = digitalRead(cmbuttonPin); 
+  digitalWrite(trigPin, LOW);
+  delay(2);
+  digitalWrite(trigPin, HIGH);
+  delay(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH); 
+  buttonState = digitalRead(9);  // read the state of the pushbutton
+  
+  
+  if (buttonState == HIGH)   // check if pushbutton is pressed. if it is, the
+  {
+   	distanceMeter = duration*0.000344/2;
+    lcd.setCursor(0,0);//FOR SECOND LINE OF LCD
+    lcd.print(" SOCIAL DISTANCE ");
+    delay(2);
+    lcd.setCursor(0,1);
+    lcd.print("Distance:");
+    lcd.print(distanceMeter);
+    lcd.print("  m");
+    delay(10);
+    sound();
+    Serial.println("distanceMeter= ");
+  } 
+  else 
+  {
+    distanceCm= duration*0.0344/2;
+    lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+    lcd.print("YOUR MEASUREMENT ");
+    lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+    lcd.print("Distance:"); // Prints string "Distance" on the LCD
+    lcd.print(distanceCm); // Prints the distance value from the sensor
+    lcd.print("cm");
+    delay(10);
+  }
+  delay(10); // Delay a little bit to improve simulation performance
+
+}
+
+//////////////////////////////////////////////////////
+#include <LiquidCrystal.h>  // includes the LiquidCrystal Library\
+
+  int buttonState = 0;
+  const int rs=12, en=11, d4=5, d5=4, d6=3, d7=2 ;
+  LiquidCrystal lcd(rs,en,d4,d5,d6,d7); // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+  const int trigPin = 10;
+  const int echoPin = 13;
+  long duration;//LONG VARIABLE
+  float distanceCm, distanceMeter;
+  int buzzer = 8;
+  int LEDalert = A3;
+  int LEDMeter = A4;
+  int LEDcm = A5;
+//declaration of all pin we used
+
+void setup()
+{
+  lcd.begin(16,2); // Initializes the interface to the LCD
+  lcd.print(" SOCIAL DISTANCE ");
+  lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+  lcd.print(" FINAL PROJECT");
+  delay(2000);
+  //pinMode(cmbuttonPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  pinMode(9, INPUT);
+  pinMode(8,OUTPUT);
+  pinMode(LEDalert, OUTPUT);
+  pinMode(LEDMeter, OUTPUT);
+  pinMode(LEDcm, OUTPUT);
+}
+
+void sound()
+{
+	if(distanceMeter >= 1)
+  { 
+    digitalWrite(buzzer, HIGH);
+    delay(2);
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LEDalert, HIGH);
+  }
+}
+
+void loop()
+{
+  //int value = digitalRead(cmbuttonPin); 
+  digitalWrite(trigPin, LOW);
+  delay(2);
+  digitalWrite(trigPin, HIGH);
+  delay(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH); 
+  buttonState = digitalRead(9);  // read the state of the pushbutton
+  
+  
+  if (buttonState == HIGH)   // check if pushbutton is pressed. if it is, the
+  {
+   	distanceMeter = duration*0.000344/2;
+    lcd.setCursor(0,0);//FOR SECOND LINE OF LCD
+    lcd.print(" SOCIAL DISTANCE ");
+    delay(2);
+    lcd.setCursor(0,1);
+    lcd.print("Distance:");
+    lcd.print(distanceMeter);
+    lcd.print("  m");
+    delay(10);
+    sound();
+    digitalWrite(LEDMeter, HIGH);
+    Serial.println("distanceMeter= ");
+  } 
+  else 
+  {
+    distanceCm= duration*0.0344/2;
+    lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+    lcd.print("YOUR MEASUREMENT ");
+    lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+    lcd.print("Distance:"); // Prints string "Distance" on the LCD
+    lcd.print(distanceCm); // Prints the distance value from the sensor
+    lcd.print("cm");
+    digitalWrite(LEDcm, HIGH);
+    delay(10);
+  }
+  delay(10); // Delay a little bit to improve simulation performance
+
+}
+
+///////////////////////////////////
+#include <LiquidCrystal.h>  // includes the LiquidCrystal Library\
+
+  int buttonState = 0;
+  const int rs=12, en=11, d4=5, d5=4, d6=3, d7=2 ;
+  LiquidCrystal lcd(rs,en,d4,d5,d6,d7); // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+  const int trigPin = 10;
+  const int echoPin = 13;
+  long duration;//LONG VARIABLE
+  float distanceCm, distanceMeter;
+  int buzzer = 8;
+  int LEDalert = A3;
+  int LEDMeter = A4;
+  int LEDcm = A5;
+//declaration of all pin we used
+
+void setup()
+{
+  lcd.begin(16,2); // Initializes the interface to the LCD
+  lcd.print(" SOCIAL DISTANCE ");
+  lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+  lcd.print(" FINAL PROJECT");
+  delay(20);
+  //pinMode(cmbuttonPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  pinMode(9, INPUT);
+  pinMode(8,OUTPUT);
+  pinMode(LEDalert, OUTPUT);
+  pinMode(LEDMeter, OUTPUT);
+  pinMode(LEDcm, OUTPUT);
+}
+
+void sound()
+{
+	if(distanceMeter >= 1)
+  { 
+    digitalWrite(buzzer, HIGH);
+    delay(2);
+    digitalWrite(buzzer, LOW);
+    analogWrite(LEDalert, 255);
+    delay(20);
+    analogWrite(LEDalert, 0);    
+  }
+}
+
+void loop()
+{
+  //int value = digitalRead(cmbuttonPin); 
+  digitalWrite(trigPin, LOW);
+  delay(2);
+  digitalWrite(trigPin, HIGH);
+  delay(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH); 
+  buttonState = digitalRead(9);  // read the state of the pushbutton
+  
+  
+  if (buttonState == HIGH)   // check if pushbutton is pressed. if it is, the
+  {
+   	distanceMeter = duration*0.000344/2;
+    lcd.setCursor(0,0);//FOR SECOND LINE OF LCD
+    lcd.print(" SOCIAL DISTANCE ");
+    delay(2);
+    lcd.setCursor(0,1);
+    lcd.print("Distance:");
+    lcd.print(distanceMeter);
+    lcd.print("  m");
+    delay(10);
+    sound();
+    analogWrite(LEDMeter, 255);
+    delay(20);
+    analogWrite(LEDMeter, 0);
+    Serial.println("distanceMeter= ");
+  } 
+  else 
+  {
+    distanceCm= duration*0.0344/2;
+    lcd.setCursor(0,1);//FOR SECOND LINE OF LCD
+    lcd.print("YOUR MEASUREMENT ");
+    lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+    lcd.print("Distance:"); // Prints string "Distance" on the LCD
+    lcd.print(distanceCm); // Prints the distance value from the sensor
+    lcd.print("cm");
+    analogWrite(LEDcm, 255);
+    delay(6000);
+    analogWrite(LEDcm, 0);
+    delay(20);
+  }
+  delay(10); // Delay a little bit to improve simulation performance
+
+}
